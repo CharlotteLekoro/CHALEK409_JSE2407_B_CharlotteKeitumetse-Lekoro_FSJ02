@@ -1,101 +1,216 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Footer from "./components/Footer";
+import ProductCard from "./components/ProductCard";
+import Pagination from "./components/Pagination";
+import Header from "./components/Header";
+import CategoryFilter from "./components/CategoryFilter";
+import SortOptions from "./components/SortOptions";
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { metadata } from "./metadata";
+
+
+// Fetch products with filters and pagination
+async function fetchProducts(params) {
+  const queryString = new URLSearchParams({
+    ...params,
+    skip: ((params.page - 1) * params.limit).toString(),
+  }).toString();
+  const res = await fetch(`https://next-ecommerce-api.vercel.app/products?${queryString}`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch products");
+  }
+  return res.json();
+}
+
+// Fetch categories
+async function fetchCategories() {
+  const res = await fetch('https://next-ecommerce-api.vercel.app/categories'); 
+  if (!res.ok) {
+    throw new Error("Failed to fetch categories");
+  }
+  return res.json();
+}
+
+
+
+export default function ProductsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // State initialization based on query parameters
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
+  const [selectedSort, setSelectedSort] = useState(searchParams.get("sort") || "price");
+  const [selectedOrder, setSelectedOrder] = useState(searchParams.get("order") || "asc");
+  const [page, setPage] = useState(parseInt(searchParams.get("page")) || 1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const ITEMS_PER_PAGE = 20;
+
+  const fetchProductsData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params = {
+        search: searchQuery,
+        category: selectedCategory,
+        sort: selectedSort,
+        order: selectedOrder,
+        page: page,
+        limit: ITEMS_PER_PAGE
+      };
+      const data = await fetchProducts(params);
+      console.log("Fetched data:", data); // Log the fetched data
+      setProducts(data.products || data);
+      setTotalPages(Math.ceil((data.total || data.length) / ITEMS_PER_PAGE));
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+      setProducts([]);
+      setTotalPages(1);
+    }
+    setIsLoading(false);
+  }, [searchQuery, selectedCategory, selectedSort, selectedOrder, page]);
+
+  // Fetch categories on initial load
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const fetchedCategories = await fetchCategories();
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Failed to load categories:", error);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  // Fetch products when filters or page changes
+  useEffect(() => {
+    fetchProductsData();
+  }, [fetchProductsData]);
+
+  // Update URL with current filters and page
+  useEffect(() => {
+    const query = new URLSearchParams({
+      search: searchQuery,
+      category: selectedCategory,
+      sort: selectedSort,
+      order: selectedOrder,
+      page: page.toString(),
+    }).toString();
+    router.push(`?${query}`, { scroll: false });
+  }, [searchQuery, selectedCategory, selectedSort, selectedOrder, page, router]);
+
+  // Parse URL parameters on page load
+  useEffect(() => {
+    const newPage = parseInt(searchParams.get("page")) || 1;
+    setSearchQuery(searchParams.get("search") || "");
+    setSelectedCategory(searchParams.get("category") || "");
+    setSelectedSort(searchParams.get("sort") || "price");
+    setSelectedOrder(searchParams.get("order") || "asc");
+    setPage(newPage);
+  }, [searchParams]);
+
+  // Handlers for user input
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setPage(1);
+  };
+
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+    setPage(1);
+  };
+
+  const handleSortOrderSelect = (sort, order) => {
+    setSelectedSort(sort);
+    setSelectedOrder(order);
+    setPage(1);
+  };
+
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("");
+    setSelectedSort("price");
+    setSelectedOrder("asc");
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    window.scrollTo(0, 0);
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div>
+      <Header />
+      <div className="flex flex-col min-h-screen">
+        <div className="flex-grow">
+          <div className="max-w-6xl mx-auto p-8">
+            <h1 className="text-3xl font-bold mb-8">My Products</h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            {/* Search Bar */}
+            <div className="mb-4 relative">
+              <input
+                type="text"
+                placeholder="Search for products..."
+                value={searchQuery}
+                onChange={handleSearch}
+                className="w-full p-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <MagnifyingGlassIcon className="absolute top-1/2 left-3 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+            </div>
+
+            {/* Category Filter */}
+            <CategoryFilter
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={handleCategorySelect}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+
+            {/* Sort Options */}
+            <SortOptions
+              selectedSort={selectedSort}
+              selectedOrder={selectedOrder}
+              onSelectSortOrder={handleSortOrderSelect}
+            />
+            
+            {/* Reset Filters Button */}
+            <button onClick={resetFilters} className="mt-4 p-2 bg-red-500 text-white rounded">
+              Reset Filters
+            </button>
+
+            {/* Products Grid */}
+            {isLoading ? (
+              <p>Loading products...</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-8">
+                {products.length > 0 ? (
+                  products.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))
+                ) : (
+                  <p>No products found.</p>
+                )}
+              </div>
+            )}
+
+            {/* Pagination Component */}
+            <Pagination 
+              currentPage={page} 
+              totalPages={totalPages} 
+              onPageChange={handlePageChange}
+            />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <Footer />
+      </div>
     </div>
   );
 }
