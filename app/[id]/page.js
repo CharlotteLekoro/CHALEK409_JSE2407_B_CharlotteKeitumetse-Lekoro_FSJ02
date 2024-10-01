@@ -10,7 +10,7 @@ async function fetchProduct(id) {
   );
 
   if (!res.ok) {
-    throw new Error("Failed to fetch product");
+    throw new Error("Product Fetching Failed");
   }
 
   return res.json();
