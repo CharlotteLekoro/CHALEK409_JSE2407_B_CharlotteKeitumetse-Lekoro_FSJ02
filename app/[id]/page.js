@@ -25,7 +25,7 @@ export default async function ProductPage({ params }) {
   } catch (error) {
     return (
       <p className="text-red-500">
-       Product Loading Failed. Try again later
+        Failed to load product. Please try again later.
       </p>
     );
   }
