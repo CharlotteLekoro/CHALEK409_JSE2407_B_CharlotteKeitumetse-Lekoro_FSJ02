@@ -21,13 +21,13 @@ export default function ProductCard({ product }) {
         <h2 className="text-lg font-semibold text-gray-800 truncate">
           {product.title}
         </h2>
-        <p className="text-blue-600 font-bold mt-2">${product.price}</p>
+        <p className="text-grey-600 font-bold mt-2">${product.price}</p>
         <p className="text-gray-500 text-sm">{product.category}</p>
         
         <Link
           href={`/${product.id}`}
-          className="block mt-4 text-center px-4 py-2 bg-pink-400
-           text-white rounded-lg hover:bg-purple-500 transition-colors duration-300"
+          className="block mt-4 text-center px-4 py-2 bg-green-400
+           text-white rounded-lg hover:bg-green-500 transition-colors duration-300"
         >
           View Details
         </Link>
