@@ -1,6 +1,4 @@
-E-Commerce Store with Next.js
-
-
+**Trendz e store**
 Introduction
 
 
@@ -66,11 +64,7 @@ Contributing
 Feel free to submit issues, pull requests, or suggestions. Please follow the standard GitHub workflow for contributing to this project.
 
 
-Contact
 
-For any inquiries, please reach out to makgakammakgosana@gmail.com.
-
-Vercel link: https://mmamak-387-jse-2407-group-c-makgaka-fsj-01.vercel.app/
 
 
 
