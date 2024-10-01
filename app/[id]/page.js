@@ -47,7 +47,7 @@ export default async function ProductPage({ params }) {
       <Header />
       <div className="max-w-5xl mx-auto p-8">
         <Link href="/">
-          <div className="inline-block mb-6 px-4 py-2 bg-green-400 text-white rounded-lg hover:bg-purple-400 transition-colors duration-300">
+          <div className="inline-block mb-6 px-4 py-2 bg-green-400 text-white rounded-lg hover:bg-green-300 transition-colors duration-300">
             Back to Products
           </div>
         </Link>
