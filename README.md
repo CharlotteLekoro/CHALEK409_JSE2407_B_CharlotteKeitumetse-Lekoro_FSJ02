@@ -23,10 +23,6 @@ Setup Instructions
 Prerequisites
 
 Node.js: Ensure you have Node.js installed. You can download it from nodejs.org.
-1.Clone the Repository
-
-git clone https://github.com/your-username/next-ecommerce-store.git
-cd next-ecommerce-store
 
 2. Install Dependencies
    
